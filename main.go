@@ -3,15 +3,11 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"ekyu.moe/leb128"
-	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"log"
 	"path"
+	"strings"
 )
 
 // OSU! mode (Standard, Taiko, Catch the Beat, Mania)
@@ -74,54 +70,66 @@ type Replay struct {
 
 func main() {
 	const replayDir = "replays"
-	fileInfos, e := ioutil.ReadDir(replayDir)
-	logError(e)
+	replays, e := ioutil.ReadDir(replayDir)
+	LogError(e)
 
-	replayName := fileInfos[0].Name()
-	replayBytes, e := ioutil.ReadFile(path.Join(replayDir, replayName))
-	fmt.Println(replayName)
-	logError(e)
+	fmt.Printf("Found %d replays\n\n", len(replays))
+	for _, replayFileInfo := range replays {
+		replayFile := replayFileInfo.Name()
+		if strings.HasPrefix(replayFile, ".") {
+			continue
+		}
+		replayPath := path.Join(replayDir, replayFile)
+		replay := getReplay(replayPath)
+		beatmap := GetBeatmap(replay.BeatMapHash)
+		fmt.Printf("%s\n", beatmap[0].Artist)
+	}
+}
+
+func getReplay(replayFile string) Replay {
+	replayBytes, e := ioutil.ReadFile(replayFile)
+	LogError(e)
 
 	// Create reader
 	buffer := bytes.NewReader(replayBytes)
 	reader := bufio.NewReader(buffer)
 
 	mode, e := reader.ReadByte()
-	logError(e)
+	LogError(e)
 
-	version, e := readInteger(reader)
-	logError(e)
+	version, e := ReadInteger(reader)
+	LogError(e)
 
-	beatmapHash, e := readString(reader)
-	logError(e)
-	playerName, e := readString(reader)
-	logError(e)
-	replayHash, e := readString(reader)
-	logError(e)
-	amount300s, e := readShort(reader)
-	logError(e)
-	amount100s, e := readShort(reader)
-	logError(e)
-	amount50s, e := readShort(reader)
-	logError(e)
-	amountSpecial300s, e := readShort(reader)
-	logError(e)
-	amountSpecial100s, e := readShort(reader)
-	logError(e)
-	misses, e := readShort(reader)
-	logError(e)
-	score, e := readInteger(reader)
-	logError(e)
-	combo, e := readShort(reader)
-	logError(e)
-	isPerfect, e := readBoolean(reader)
-	logError(e)
-	mods, e := readInteger(reader)
-	logError(e)
-	healthGraph, e := readString(reader)
-	logError(e)
-	timestamp, e := readLong(reader)
-	logError(e)
+	beatmapHash, e := ReadString(reader)
+	LogError(e)
+	playerName, e := ReadString(reader)
+	LogError(e)
+	replayHash, e := ReadString(reader)
+	LogError(e)
+	amount300s, e := ReadShort(reader)
+	LogError(e)
+	amount100s, e := ReadShort(reader)
+	LogError(e)
+	amount50s, e := ReadShort(reader)
+	LogError(e)
+	amountSpecial300s, e := ReadShort(reader)
+	LogError(e)
+	amountSpecial100s, e := ReadShort(reader)
+	LogError(e)
+	misses, e := ReadShort(reader)
+	LogError(e)
+	score, e := ReadInteger(reader)
+	LogError(e)
+	combo, e := ReadShort(reader)
+	LogError(e)
+	isPerfect, e := ReadBoolean(reader)
+	LogError(e)
+	mods, e := ReadInteger(reader)
+	LogError(e)
+	healthGraph, e := ReadString(reader)
+	LogError(e)
+	timestamp, e := ReadLong(reader)
+	LogError(e)
 
 	replay := Replay{
 		Mode:              Mode(mode),
@@ -143,77 +151,7 @@ func main() {
 		Timestamp:         timestamp,
 	}
 
-	replayJson, e := json.Marshal(replay)
-	logError(e)
+	LogError(e)
 
-	fmt.Println(string(replayJson))
-}
-
-func readLong(buffer io.Reader) (uint64, error) {
-	integer := uint64(0)
-	e := binary.Read(buffer, binary.LittleEndian, &integer)
-	return integer, e
-}
-
-func readInteger(buffer io.Reader) (uint32, error) {
-	integer := uint32(0)
-	e := binary.Read(buffer, binary.LittleEndian, &integer)
-	return integer, e
-}
-func readShort(buffer io.Reader) (uint16, error) {
-	short := uint16(0)
-	e := binary.Read(buffer, binary.LittleEndian, &short)
-	return short, e
-}
-
-func readBoolean(buffer *bufio.Reader) (bool, error) {
-	next, e := buffer.ReadByte()
-	if e != nil {
-		return false, e
-	}
-	return next == 0x1, nil
-}
-
-// Get the value of a variable length integer
-func readUleb(reader *bufio.Reader) (uint64, error) {
-	next, e := reader.Peek(10)
-	if e != nil {
-		return 0, e
-	}
-	value, length := leb128.DecodeUleb128(next)
-	_, e = reader.Discard(int(length))
-	if e != nil {
-		return 0, e
-	}
-	return value, nil
-}
-
-// Get the string value from bufio.Reader
-func readString(reader *bufio.Reader) (string, error) {
-	b, e := reader.ReadByte()
-	if e != nil {
-		return "", e
-	}
-	if b == 0x00 {
-		return "", nil
-	}
-	if b != 0x0b {
-		return "", errors.New("could not find string")
-	}
-	length, e := readUleb(reader)
-	if e != nil {
-		return "", e
-	}
-	valueArray := make([]byte, length)
-	_, e = reader.Read(valueArray)
-	if e != nil {
-		return "", e
-	}
-	return string(valueArray), nil
-}
-
-func logError(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
+	return replay
 }
