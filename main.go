@@ -17,17 +17,18 @@ import (
 // OSU! mode (Standard, Taiko, Catch the Beat, Mania)
 type Mode byte
 
-// Hex values for all modes
-const ModeStandard Mode = 0x0
-const ModeTaiko Mode = 0x1
-const ModeCTB Mode = 0x2
-const ModeMania Mode = 0x3
-
-// Names for all modes
-const ModeStandardName = "osu!standard"
-const ModeTaikoName = "osu!taiko"
-const ModeCTBName = "osu!catch"
-const ModeManiaName = "osu!mania"
+const (
+	// Hex values for all modes
+	ModeStandard Mode = 0x0
+	ModeTaiko    Mode = 0x1
+	ModeCTB      Mode = 0x2
+	ModeMania    Mode = 0x3
+	// Names for all modes
+	ModeStandardName = "osu!standard"
+	ModeTaikoName    = "osu!taiko"
+	ModeCTBName      = "osu!catch"
+	ModeManiaName    = "osu!mania"
+)
 
 func (m Mode) String() string {
 	switch m {
