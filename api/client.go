@@ -1,12 +1,10 @@
-package main
+package api
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
 )
 
 type (
@@ -54,23 +52,23 @@ func (b BeatmapResponse) String() string {
 	return string(bytes)
 }
 
-func GetBeatmap(hash string) []BeatmapResponse {
-	url := getApiBaseUrl("get_beatmaps", getApiKey())
+func GetBeatmap(token string, hash string) ([]BeatmapResponse, error) {
+	url := getApiBaseUrl("get_beatmaps", token)
 	url = url + "&h=" + hash
 	response, e := getRequest(url)
 	if e != nil {
-		log.Fatal(e)
+		return nil, e
 	}
 	responseBytes, e := getResponseBody(response)
 	if e != nil {
-		log.Fatal(e)
+		return nil, e
 	}
 	beatmapResponse := make([]BeatmapResponse, 0)
 	e = json.Unmarshal(responseBytes, &beatmapResponse)
 	if e != nil {
-		log.Fatal(e)
+		return nil, e
 	}
-	return beatmapResponse
+	return beatmapResponse, nil
 }
 
 func getResponseBody(response *http.Response) ([]byte, error) {
@@ -85,8 +83,4 @@ func getRequest(url string) (*http.Response, error) {
 // Get the base URL for an endpoint, i.e. "get_beatmaps"
 func getApiBaseUrl(endpoint string, token string) string {
 	return fmt.Sprintf("https://osu.ppy.sh/api/%s?k=%s", endpoint, token)
-}
-
-func getApiKey() string {
-	return os.Getenv("OSU_API_TOKEN")
 }

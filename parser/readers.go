@@ -1,12 +1,12 @@
-package main
+package parser
 
 import (
 	"bufio"
 	"ekyu.moe/leb128"
 	"encoding/binary"
 	"errors"
+	"github.com/ulikunitz/xz/lzma"
 	"io"
-	"log"
 )
 
 func ReadLong(buffer io.Reader) (uint64, error) {
@@ -21,12 +21,14 @@ func ReadInteger(buffer io.Reader) (uint32, error) {
 	return integer, e
 }
 
+// Read a short value (uint16) from a reader
 func ReadShort(buffer io.Reader) (uint16, error) {
 	short := uint16(0)
 	e := binary.Read(buffer, binary.LittleEndian, &short)
 	return short, e
 }
 
+// Get the boolean value of the next byte of a reader
 func ReadBoolean(buffer *bufio.Reader) (bool, error) {
 	next, e := buffer.ReadByte()
 	if e != nil {
@@ -73,9 +75,18 @@ func ReadString(reader *bufio.Reader) (string, error) {
 	return string(valueArray), nil
 }
 
-// Log an error if it's not nil
-func LogError(err error) {
-	if err != nil {
-		log.Fatal(err)
+func ReadLZMA(reader *bufio.Reader, length uint32) (string, error) {
+	bytes := make([]byte, length)
+	r, e := lzma.NewReader(reader)
+	if e != nil {
+		return "", e
 	}
+	n, e := r.Read(bytes)
+	if e != nil {
+		return "", e
+	}
+	if n != int(length) {
+		return "", errors.New("could not read given length of data")
+	}
+	return string(bytes), nil
 }
