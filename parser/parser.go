@@ -135,24 +135,6 @@ func parseReplay(reader *bufio.Reader) (*ReplayData, error) {
 	return replay, nil
 }
 
-var availableMods = []Mod{
-	{Name: "NoFail", Multiplier: 0.5, bitOffset: 1},
-	{Name: "Easy", Multiplier: 0.5, bitOffset: 2},
-	{Name: "TouchDevice", Multiplier: -1, bitOffset: 4},
-	{Name: "Hidden", Multiplier: 1.06, bitOffset: 8},
-	{Name: "Hard Rock", Multiplier: 1.06, bitOffset: 16},
-	{Name: "Sudden Death", Multiplier: 1.0, bitOffset: 32},
-	{Name: "Double Time", Multiplier: 1.12, bitOffset: 64},
-	{Name: "Relax", Multiplier: 0.0, bitOffset: 128},
-	{Name: "Half Time", Multiplier: 0.30, bitOffset: 256},
-	{Name: "Nightcore", Multiplier: 1.12, bitOffset: 512},
-	{Name: "Flashlight", Multiplier: 1.12, bitOffset: 1024},
-	{Name: "Auto", Multiplier: 1.0, bitOffset: 2048},
-	{Name: "Spun Out", Multiplier: 0.90, bitOffset: 4096},
-	{Name: "Auto Pilot", Multiplier: 0.0, bitOffset: 8192},
-	{Name: "Perfect", Multiplier: 1.0, bitOffset: 16384},
-}
-
 func parseRawReplay(replay *rawReplay) *ReplayData {
 	mods := make([]Mod, 0)
 	for _, mod := range availableMods {
